@@ -14,7 +14,7 @@ class BoardText extends BoardItem {
   int rightMDCodePoint = 0;
   int topMDCodePoint = 0;
   int bottomMDCodePoint = 0;
-  ImageItem? parent;
+  dynamic parent;
   BoardText(super.globalPosition, super.scale, super.width, super.height,
       super.code, this.text, this.bgColor, this.textColor, this.parent,
       {int leftMDCodePoint = 0,

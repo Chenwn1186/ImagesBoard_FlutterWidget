@@ -181,13 +181,13 @@ class ImageItem extends BoardItem {
       localPosition.dx - width * totalScale / 2;
 
   double getTop(double totalScale) =>
-      localPosition.dy + height * totalScale / 2;
+      localPosition.dy - height * totalScale / 2;
 
   double getRight(double totalScale) =>
       localPosition.dx + width * totalScale / 2;
 
   double getBottom(double totalScale) =>
-      localPosition.dy - height * totalScale / 2 - labelsHeight;
+      localPosition.dy + height * totalScale / 2 + labelsHeight;
 
   bool checkPointsOnTap(Offset position) {
     //todo: 后续可能要加上完整的四个点的点击判断

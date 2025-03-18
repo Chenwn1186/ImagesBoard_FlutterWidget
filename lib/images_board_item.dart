@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:simple_canvas/images_board.dart';
 import 'package:simple_canvas/images_board_item_img.dart';
+import 'package:simple_canvas/images_board_item_text.dart';
 
 class BoardItem {
   ///全局坐标
@@ -348,3 +349,91 @@ class BoardLine {
 
 
 
+class BoardArea extends BoardItem {
+  List<ImageItem> items = [];
+  Color bgColor = const Color.fromARGB(161, 255, 255, 255);
+  Color sideColor = const Color.fromARGB(255, 174, 174, 174);
+  double minX=0;
+  double minY=0;
+  double maxX=0;
+  double maxY=0;
+  List<BoardText> labels = [];
+  List<BoardText> toDeletLabels = [];
+  List<BoardText> toAddLabels = [];
+  BoardArea(super.globalPosition, super.scale, super.width, super.height, super.code){
+    if (labels.isEmpty) {
+      var addButton = BoardText(
+          Offset(localPosition.dx, localPosition.dy),
+          scale * ImagesBoardManager().scale,
+          width,
+          height,
+          DateTime.now().millisecondsSinceEpoch,
+          '添加标签',
+          Colors.white,
+          Colors.black,
+          this,
+          leftMDCodePoint: Icons.add.codePoint);
+      labels.add(addButton);
+    }
+  }
+
+  @override
+  bool inArea(Offset globalPoint) {
+    var localPosition = ImagesBoardManager().global2Local(globalPoint)+ ImagesBoardManager().globalOffset;
+    return localPosition.dx >= minX &&
+        localPosition.dx <= maxX &&
+        localPosition.dy >= minY &&
+        localPosition.dy <= maxY;
+  }
+
+
+  bool checkDelete(Offset globalPoint) {
+    if (inArea(globalPoint)) {
+      ImagesBoardManager().lastItemCode = code;
+      print('set code img');
+
+      unclick();
+      click();
+      // ImagesBoardManager().imageItems.remove(this);
+      return true;
+    }
+    return false;
+  }
+
+  bool checkLabelsClick(Offset globalPoint, BuildContext context) {
+    bool result = false;
+    for (int i = 0; i < labels.length; i++) {
+        var element = labels[i];
+        if (element.checkInArea(globalPoint, false, context: context)) {
+            result = true;
+        }
+    }
+    labels.insertAll(0, toAddLabels);
+    toAddLabels.clear();
+    labels.removeWhere((element) => toDeletLabels.contains(element));
+    toDeletLabels.clear();
+    return result;
+}
+
+  void addLabel(String text, Color bgColor, Color textColor) {
+    var label = BoardText(
+        Offset(localPosition.dx, localPosition.dy),
+        scale * ImagesBoardManager().scale,
+        width,
+        height,
+        DateTime.now().millisecondsSinceEpoch,
+        text,
+        bgColor,
+        textColor,
+        this);
+
+    // toAddLabels.add(label);
+    labels.insert(labels.length-1, label);
+  }
+
+  void deleteLabel(String text) {
+    if (text != '添加标签') {
+      labels.removeWhere((element) => element.text == text);
+    }
+  }
+}

@@ -111,11 +111,13 @@ class ImagesBoardManager with ChangeNotifier {
 
       //todo: 后续添加弹窗设置区域的颜色，甚至标题
       // 将 toAddinArea 中的所有 ImageItem 添加到 BoardArea 中
-      area.items.addAll(toAddinArea);
-      print('area items: ${area.items.length}');
+      if (toAddinArea.length > 1) {
+        area.items.addAll(toAddinArea);
+        print('area items: ${area.items.length}');
 
-      // 将新的 BoardArea 添加到 areas 列表中
-      areas.add(area);
+        // 将新的 BoardArea 添加到 areas 列表中
+        areas.add(area);
+      }
     }
     isCreatingArea = false;
     areaStart = Offset.zero;
@@ -248,6 +250,8 @@ class _ImagesBoardState extends State<ImagesBoard> {
         if (mng.isCreatingArea) {
           mng.checkInSelectedArea();
         }
+        ImagesBoardManager().clickFresh++;
+        ImagesBoardManager().updateView();
       },
       onPointerSignal: (PointerSignalEvent event) {
         if (event is PointerScrollEvent) {
@@ -256,6 +260,8 @@ class _ImagesBoardState extends State<ImagesBoard> {
           timer?.cancel();
           timer = Timer(const Duration(milliseconds: 50), () {
             ImagesBoardManager().addScale(0, event.localPosition);
+            ImagesBoardManager().clickFresh++;
+            ImagesBoardManager().updateView();
           });
 
           if (ImagesBoardManager().enableDragging) {
@@ -265,18 +271,18 @@ class _ImagesBoardState extends State<ImagesBoard> {
             ImagesBoardManager()
                 .currentItem
                 ?.addScale(-event.scrollDelta.dy * 0.002);
-
-            ImagesBoardManager().clickFresh++;
-            ImagesBoardManager().updateView();
           }
+          ImagesBoardManager().clickFresh++;
+          ImagesBoardManager().updateView();
         }
       },
       onPointerMove: (event) {
         var mng = ImagesBoardManager();
+        mng.mousePosition = event.localPosition;
         mng.scale = mng.oldScale;
         if (event.buttons == 1) {
           // print('鼠标移动事件');
-          mng.mousePosition = event.localPosition;
+
           // 检测到鼠标左键按下
           if (mng.enableDragging) {
             mng.globalOffset += event.delta;
@@ -309,6 +315,12 @@ class _ImagesBoardState extends State<ImagesBoard> {
 
           for (var line in ImagesBoardManager().lines.reversed) {
             if (!isClicked && line.checkDelete(event.position)) {
+              isClicked = true;
+            }
+          }
+
+          for (var area in ImagesBoardManager().areas.reversed) {
+            if (!isClicked && area.checkDelete(event.position)) {
               isClicked = true;
             }
           }
@@ -352,6 +364,12 @@ class _ImagesBoardState extends State<ImagesBoard> {
         for (var line in ImagesBoardManager().lines.reversed) {
           if (line.isPointOnPath(event.position, isClicked)) {
             isClicked = true;
+          }
+        }
+
+        for(var area in ImagesBoardManager().areas.reversed) {
+          if (area.checkLabelsClick(event.position, context)) {
+            // print('点击了 标签');
           }
         }
 
@@ -493,11 +511,11 @@ class ImagesBoardPainter extends CustomPainter {
         maxX = double.negativeInfinity,
         maxY = double.negativeInfinity;
     for (var item in area.items) {
-      var totalScale = mng.scale * area.scale;
+      var totalScale = mng.scale * item.scale;
       minX = min(minX, item.getLeft(totalScale) + golobalOffset.dx);
-      minY = min(minY, item.getBottom(totalScale) + golobalOffset.dy);
+      minY = min(minY, item.getTop(totalScale) + golobalOffset.dy);
       maxX = max(maxX, item.getRight(totalScale) + golobalOffset.dx);
-      maxY = max(maxY, item.getTop(totalScale) + golobalOffset.dy);
+      maxY = max(maxY, item.getBottom(totalScale) + golobalOffset.dy);
     }
 
     // print(' minX: $minX, minY: $minY, maxX: $maxX, maxY: $maxY');
@@ -510,13 +528,22 @@ class ImagesBoardPainter extends CustomPainter {
       return;
     }
 
+    area.minX = minX;
+    area.minY = minY;
+    area.maxX = maxX;
+    area.maxY = maxY;
+
     var width = maxX - minX;
     var height = maxY - minY;
 
+    area.localPosition = Offset((minX + maxX) / 2, (minY + maxY) / 2) - golobalOffset;
+    area.width = width/mng.scale;
+    area.height = height/mng.scale;
+
     var rect = Rect.fromCenter(
         center: Offset((minX + maxX) / 2, (minY + maxY) / 2),
-        width: width * (1 + mng.scale / 10),
-        height: height * (1 + mng.scale / 10));
+        width: width * (1 + 0.05),
+        height: height * (1 + 0.05));
 
     // 绘制背景填充
     var bgPaint = Paint()
@@ -597,7 +624,7 @@ class ImagesBoardPainter extends CustomPainter {
   }
 
   void drawLabels(
-      ImageItem item, Canvas canvas, Offset globalOffset, double totalScale) {
+      dynamic item, Canvas canvas, Offset globalOffset, double totalScale) {
     double standardLong =
         (item.width > item.height ? item.width : item.height) * totalScale;
     var maxWidth = item.width * totalScale;
@@ -646,7 +673,9 @@ class ImagesBoardPainter extends CustomPainter {
         // lineIndex++;
         lineOffset = 0;
         yOffset += rectHeight + standardLong * 0.05; // 增加行间距
-        item.labelsHeight = yOffset + rectHeight + standardLong * 0.05;
+        // item.labelsHeight = yOffset + rectHeight + standardLong * 0.05;
+      } else {
+        //  item.labelsHeight = yOffset + rectHeight + standardLong * 0.05;
       }
 
       // 计算矩形的位置，从左下角开始
@@ -684,6 +713,10 @@ class ImagesBoardPainter extends CustomPainter {
       // 设置当前label的width和height为矩形的长和宽
       label.width = rectWidth / totalScale;
       label.height = rectHeight / totalScale;
+
+      if(item is ImageItem) {
+        item.labelsHeight = yOffset + rectHeight + standardLong * 0.05;
+      }
 
       // 设置当前label的localPosition为矩形中心
       label.localPosition = Offset(rectX + rectWidth / 2 - globalOffset.dx,
@@ -810,6 +843,7 @@ class ImagesBoardPainter extends CustomPainter {
 
     for (var area in imagesBoardManager.areas) {
       drawArea(canvas, area);
+      drawLabels(area, canvas, globalOffset, scale);
     }
 
     for (var line in imagesBoardManager.lines) {
