@@ -51,31 +51,44 @@ class _ImagePickerScreenState extends State<ImagePickerScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('白板测试')),
-      body: Column(
+      body: Stack(
         children: [
-          ImagesBoard(
+          SizedBox(
             width: width,
-            height: height*0.6,
+            height: height,
+            child: ImagesBoard(
+              width: width,
+              height: height,
+            ),
           ),
-          IconButton(
-              onPressed: () async {
-                var paths = FileUtils.pickFile(context);
-                paths.then((imgPaths) {
-                  setState(() {
-                    if(imgPaths == null) return;
-                    imagePaths!.addAll(imgPaths);
+          Positioned(
+            bottom: 300,
+            child: IconButton(
+                onPressed: () async {
+                  var paths = FileUtils.pickFile(context);
+                  paths.then((imgPaths) {
+                    setState(() {
+                      if(imgPaths == null) return;
+                      imagePaths!.addAll(imgPaths);
+                    });
                   });
-                });
-              },
-              icon: Icon(Icons.add)),
-          Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: imagePaths?.length ?? 0,
-              itemBuilder: (BuildContext context, int index) {
-                return DraggableImage(
-                    width: 200, height: 200, imgPath: imagePaths![index]);
-              },
+                },
+                icon: Icon(Icons.add)),
+          ),
+          Positioned(
+            bottom: 10,
+            child: Container(
+              height: 100,
+              width: width,
+              color: const Color.fromARGB(178, 255, 255, 255),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: imagePaths?.length ?? 0,
+                itemBuilder: (BuildContext context, int index) {
+                  return DraggableImage(
+                      width: 100, height: 100, imgPath: imagePaths![index], onTap: (){}, onRightTap: () {  },);
+                },
+              ),
             ),
           )
         ],

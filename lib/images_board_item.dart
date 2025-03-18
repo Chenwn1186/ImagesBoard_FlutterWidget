@@ -170,10 +170,10 @@ class BoardPoint {
     scale = min(max(scale, minScale), maxScale);
   }
 
-  bool checkOnLine(Offset globalPoint, {Offset delta = Offset.zero}) {
+  bool checkOnLine(Offset globalPoint, {Offset delta = Offset.zero, bool isClicked = false}) {
     if (parentLine == null) return false;
     bool result = inArea(globalPoint);
-    if (!result) {
+    if (!result || isClicked) {
       unclick();
       return false;
     }
@@ -252,9 +252,9 @@ class BoardLine {
     }
   }
 
-  bool checkPointsInArea(Offset globalPoint, {Offset delta = Offset.zero}) {
+  bool checkPointsInArea(Offset globalPoint, {Offset delta = Offset.zero, bool isClicked = false}) {
     for (int i = 1; i < points.length - 1; i++) {
-      if (points[i].checkOnLine(globalPoint, delta: delta)) {
+      if (points[i].checkOnLine(globalPoint, delta: delta, isClicked:  isClicked)) {
         selectedPoint = i;
         return true;
       }
@@ -283,7 +283,10 @@ class BoardLine {
       {bool rightClick = false}) {
     if (!rightClick) {
       if (inTail(position)) return false;
-      if (checkPointsInArea(position)) return true;
+      if (checkPointsInArea(position, isClicked: isClicked)) return true;
+    }
+    else{
+
     }
     double tolerance = width * scale * ImagesBoardManager().scale * 2;
     final metrics = path.computeMetrics();
