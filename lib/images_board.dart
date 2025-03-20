@@ -832,7 +832,7 @@ class ImagesBoardPainter extends CustomPainter {
     canvas.drawRRect(rrect, borderPaint);
 
     final gridPaint = Paint()
-      ..color = const Color.fromARGB(255, 198, 198, 198)
+      ..color = const Color.fromARGB(255, 231, 231, 231)
       ..strokeWidth = 1;
     double x1 = (backgroundLine.dx) % gridSpacing + globalOffset.dx;
     double y1 = (backgroundLine.dy) % gridSpacing + globalOffset.dy;

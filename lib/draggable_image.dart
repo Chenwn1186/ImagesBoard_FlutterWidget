@@ -80,11 +80,13 @@ class _DraggableImageState extends State<DraggableImage> {
             },
             child: Listener(
               onPointerDown: (event) {
-                widget.onTap!();
+                
                 setState(() {
                   if (event.buttons == 1) {
+                    widget.onTap();
                     isSelected = true;
                   } else if (event.buttons == 2) {
+                    widget.onRightTap();
                     isSelected = false;
                   }
                   draggingPosition = event.localPosition;
