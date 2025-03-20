@@ -10,8 +10,10 @@ class DraggableImage extends StatefulWidget {
     super.key,
     required this.width,
     required this.height,
-    required this.imgPath, 
-    required this.onTap, required this.onRightTap,
+    required this.imgPath,
+    required this.onTap,
+    required this.onRightTap,
+    this.isSelected = false,
   });
 
   final double width;
@@ -19,6 +21,7 @@ class DraggableImage extends StatefulWidget {
   final String imgPath;
   final void Function() onTap;
   final void Function() onRightTap;
+  final bool isSelected;
   @override
   State<StatefulWidget> createState() {
     return _DraggableImageState();
@@ -39,8 +42,6 @@ class _DraggableImageState extends State<DraggableImage> {
   double draggingAreaHeight = 0;
   Offset draggingAreaOffset = Offset.zero;
 
-  
-
   bool inDraggingImageArea(Offset globalPoint) {
     // 将全局坐标转换为局部坐标
     var localOffset = globalPoint - draggingAreaOffset;
@@ -52,7 +53,9 @@ class _DraggableImageState extends State<DraggableImage> {
     return FutureBuilder(
       future: ImagesBoardManager().loadImage(widget.imgPath),
       builder: (BuildContext context, AsyncSnapshot<ui.Image> img) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        isSelected = widget.isSelected;
+        if(mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
           final renderBox = context.findRenderObject() as RenderBox?;
           if (renderBox != null) {
             draggingAreaWidth = renderBox.size.width;
@@ -62,6 +65,7 @@ class _DraggableImageState extends State<DraggableImage> {
             print('renderBox is null');
           }
         });
+        }
         if (img.hasData) {
           return MouseRegion(
             onEnter: (_) {
@@ -80,7 +84,6 @@ class _DraggableImageState extends State<DraggableImage> {
             },
             child: Listener(
               onPointerDown: (event) {
-                
                 setState(() {
                   if (event.buttons == 1) {
                     widget.onTap();

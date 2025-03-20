@@ -288,7 +288,7 @@ class _ImagesBoardState extends State<ImagesBoard> {
             mng.globalOffset += event.delta;
           } else {
             mng.currentItem?.addOffset(event.delta);
-            if(mng.currentItem == null) {
+            if (mng.currentItem == null) {
               mng.currentSelectedPoint?.addOffset(event.delta);
             }
           }
@@ -369,7 +369,7 @@ class _ImagesBoardState extends State<ImagesBoard> {
           }
         }
 
-        for(var area in ImagesBoardManager().areas.reversed) {
+        for (var area in ImagesBoardManager().areas.reversed) {
           if (area.checkLabelsClick(event.position, context)) {
             // print('点击了 标签');
           }
@@ -538,9 +538,10 @@ class ImagesBoardPainter extends CustomPainter {
     var width = maxX - minX;
     var height = maxY - minY;
 
-    area.localPosition = Offset((minX + maxX) / 2, (minY + maxY) / 2) - golobalOffset;
-    area.width = width/mng.scale;
-    area.height = height/mng.scale;
+    area.localPosition =
+        Offset((minX + maxX) / 2, (minY + maxY) / 2) - golobalOffset;
+    area.width = width / mng.scale;
+    area.height = height / mng.scale;
 
     var rect = Rect.fromCenter(
         center: Offset((minX + maxX) / 2, (minY + maxY) / 2),
@@ -629,8 +630,10 @@ class ImagesBoardPainter extends CustomPainter {
       dynamic item, Canvas canvas, Offset globalOffset, double totalScale) {
     double standardLong =
         (item.width > item.height ? item.width : item.height) * totalScale;
-    if(item is BoardArea){
-      standardLong = (item.width > item.height ? item.width : item.height) * totalScale * 0.7;
+    if (item is BoardArea) {
+      standardLong = (item.width > item.height ? item.width : item.height) *
+          totalScale *
+          0.7;
     }
     var maxWidth = item.width * totalScale;
     var height = maxWidth * 0.1;
@@ -719,7 +722,7 @@ class ImagesBoardPainter extends CustomPainter {
       label.width = rectWidth / totalScale;
       label.height = rectHeight / totalScale;
 
-      if(item is ImageItem) {
+      if (item is ImageItem) {
         item.labelsHeight = yOffset + rectHeight + standardLong * 0.05;
       }
 
@@ -798,12 +801,6 @@ class ImagesBoardPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 绘制白色背景
-    final backgroundPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
-
     // print('绘制');
     var imagesBoardManager = ImagesBoardManager();
     var globalOffset = imagesBoardManager.globalOffset;
@@ -823,6 +820,12 @@ class ImagesBoardPainter extends CustomPainter {
       borderRadius.topLeft,
     );
     canvas.clipRRect(rrect);
+    // 绘制白色背景
+    final backgroundPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
 
 // 绘制相同形状的边框
     final borderPaint = Paint()
