@@ -83,7 +83,7 @@ class FloatingComponentState extends State<FloatingComponent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('选择颜色'),
+          title: Center(child: const Text('选择颜色')),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: Colors.blue,
@@ -91,13 +91,13 @@ class FloatingComponentState extends State<FloatingComponent> {
             ),
           ),
           actions: <Widget>[
-            ElevatedButton(
+            TextButton(
               child: const Text('取消'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
-            ElevatedButton(
+            TextButton(
               child: const Text('确定'),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -112,7 +112,7 @@ class FloatingComponentState extends State<FloatingComponent> {
   @override
   Widget build(context) {
     return AlertDialog(
-      title: const Text('输入标签'),
+      title: Center(child: const Text('输入标签')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -128,7 +128,8 @@ class FloatingComponentState extends State<FloatingComponent> {
                   controller: textEditingController,
                   onChanged: (value) {},
                   onSubmitted: (value) {
-                    widget.onSubmitted(textEditingController.text, bgColor, textColor);
+                    widget.onSubmitted(
+                        textEditingController.text, bgColor, textColor);
                     textEditingController.clear();
                     Navigator.of(context).pop();
                   },
@@ -173,21 +174,22 @@ class FloatingComponentState extends State<FloatingComponent> {
         ],
       ),
       actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (textEditingController.text.isNotEmpty) {
-              widget.onSubmitted(textEditingController.text, bgColor, textColor);
-            }
-            Navigator.of(context).pop();
-          },
-          child: const Text('确定'),
-        ),
-        ElevatedButton(
+        TextButton(
           onPressed: () {
             textEditingController.clear();
             Navigator.of(context).pop();
           },
           child: const Text('取消'),
+        ),
+        TextButton(
+          onPressed: () {
+            if (textEditingController.text.isNotEmpty) {
+              widget.onSubmitted(
+                  textEditingController.text, bgColor, textColor);
+            }
+            Navigator.of(context).pop();
+          },
+          child: const Text('确定'),
         ),
       ],
     );

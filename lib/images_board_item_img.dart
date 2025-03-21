@@ -64,22 +64,40 @@ class ImageItem extends BoardItem {
   }
 
   factory ImageItem.fromJson(String jsonStr) {
-    var itemMap = json.decode(jsonStr) as Map<String, dynamic>;
-    String imgPath = itemMap['imgPath'];
-    var globalPosition = Offset(
-        itemMap['globalPosition']['dx'], itemMap['globalPosition']['dy']);
-    double scale = itemMap['scale'];
-    double width = itemMap['width'];
-    double height = itemMap['height'];
-    int code = itemMap['code'];
-    return ImageItem(
-        imgPath: imgPath,
-        globalPosition: globalPosition,
-        scale: scale,
-        width: width,
-        height: height,
-        image: null,
-        code: code);
+    try {
+      var itemMap = json.decode(jsonStr) as Map<String, dynamic>;
+      String imgPath = itemMap['imgPath'];
+      var globalPosition = Offset(
+          itemMap['globalPosition']['dx'], itemMap['globalPosition']['dy']);
+      double scale = itemMap['scale'];
+      double width = itemMap['width'];
+      double height = itemMap['height'];
+      int code = itemMap['code'];
+      var localPosition = Offset(
+          itemMap['localPosition']['dx'], itemMap['localPosition']['dy']);
+      var item = ImageItem(
+          imgPath: imgPath,
+          globalPosition: globalPosition,
+          scale: scale,
+          width: width,
+          height: height,
+          image: null,
+          code: code);
+      item.localPosition = localPosition;
+
+      return item;
+    } catch (e) {
+      print(e);
+      return ImageItem(
+          imgPath: '',
+          globalPosition: Offset(0, 0),
+          scale: 1, 
+          width: 0,
+          height: 0,
+          image: null,
+          code: 0
+      );
+    }
   }
 
   String toJson() {
@@ -96,6 +114,10 @@ class ImageItem extends BoardItem {
       'scale': scale,
       'width': width,
       'height': height,
+      'code': code,
+      'leftPointCode': leftPoint.code,
+      'rightPointCode': rightPoint.code,
+      'labels': labels.map((e) => e.toJson()).toList(),
     });
   }
 
@@ -209,19 +231,24 @@ class ImageItem extends BoardItem {
   bool checkLabelsClick(Offset globalPoint, BuildContext context) {
     bool result = false;
     for (int i = 0; i < labels.length; i++) {
-        var element = labels[i];
-        if (element.checkInArea(globalPoint, false, context: context)) {
-            result = true;
-        }
+      var element = labels[i];
+      if (element.checkInArea(globalPoint, false, context: context)) {
+        result = true;
+      }
     }
     labels.insertAll(0, toAddLabels);
     toAddLabels.clear();
     labels.removeWhere((element) => toDeletLabels.contains(element));
     toDeletLabels.clear();
     return result;
-}
+  }
 
   void addLabel(String text, Color bgColor, Color textColor) {
+    for (var element in labels) {
+      if (element.text == text) {
+        return;
+      }
+    }
     var label = BoardText(
         Offset(localPosition.dx, localPosition.dy),
         scale * ImagesBoardManager().scale,
@@ -234,7 +261,7 @@ class ImageItem extends BoardItem {
         this);
 
     // toAddLabels.add(label);
-    labels.insert(labels.length-1, label);
+    labels.insert(labels.length - 1, label);
   }
 
   void deleteLabel(String text) {

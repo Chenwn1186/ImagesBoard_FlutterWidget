@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -69,6 +70,75 @@ class ImagesBoardManager with ChangeNotifier {
   List<BoardArea> areas = [];
 
   bool isCreatingArea = false;
+
+  bool autoAddLabels = true;
+
+  void saveBoard(String dirPath) {
+    var imgItemData = imageItems.map((e) => e.toJson()).toList();
+    var lineData = lines.map((e) => e.toJson()).toList();
+    var areaData = areas.map((e) => e.toJson()).toList();
+    var dir = Directory('$dirPath/board');
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
+    File imgItemFile = File('$dirPath/ImgItemData.json');
+    File lineFile = File('$dirPath/LineData.json');
+    File areaFile = File('$dirPath/AreaData.json');
+    File boardFile = File('$dirPath/board.json');
+    imgItemFile.writeAsStringSync(json.encode(imgItemData));
+    lineFile.writeAsStringSync(json.encode(lineData));
+    areaFile.writeAsStringSync(json.encode(areaData));
+    boardFile.writeAsStringSync(toJson());
+  }
+
+  void loadBoard(String dirPath) {
+    var dir = Directory('$dirPath/board');
+    if (!dir.existsSync()) {
+      return;
+    }
+    File imgItemFile = File('$dirPath/ImgItemData.json');
+    File lineFile = File('$dirPath/LineData.json');
+    File areaFile = File('$dirPath/AreaData.json'); 
+    File boardFile = File('$dirPath/board.json');
+    if (imgItemFile.existsSync()) {
+      String jsonString = imgItemFile.readAsStringSync();
+      List<dynamic> jsonList = json.decode(jsonString);
+      imageItems = jsonList.map((e) => ImageItem.fromJson(e)).toList();
+    }
+    
+  }
+
+  String toJson() {
+    return json.encode({
+      'GlobalOffset': {
+        'dx': globalOffset.dx,
+        'dy': globalOffset.dy,
+      },
+      'scale': scale,
+    });
+  }
+
+  void addLabels(String imgPath, {int code = 0}) {
+    for (var item in imageItems) {
+      if (item.imgPath == imgPath && (code == 0 || item.code == code)) {
+        String resultFilePath =
+            imgPath.replaceAll(RegExp(r'\.[^.]+$'), '.json');
+        File resultFile = File(resultFilePath);
+        if (resultFile.existsSync()) {
+          try {
+            String jsonString = resultFile.readAsStringSync();
+            Map<String, dynamic> jsonMap = json.decode(jsonString);
+            List<dynamic> labels = jsonMap['标签'] as List<dynamic>;
+            for (var label in labels) {
+              item.addLabel(label, Colors.white, Colors.black);
+            }
+          } catch (e) {
+            print('error: $e');
+          }
+        }
+      }
+    }
+  }
 
   void checkInSelectedArea() {
     if (areaStart == areaEnd) {
@@ -144,14 +214,18 @@ class ImagesBoardManager with ChangeNotifier {
   void addImageItem(ImageItem item) {
     oldScale = scale;
     imageItems.add(item);
-    print('add item center: ${item.localPosition}');
+    // print('add item center: ${item.localPosition}');
+    if (autoAddLabels) {
+      addLabels(item.imgPath, code: item.code);
+    }
     notifyListeners();
   }
 
   void addLine(BoardPoint start, BoardPoint end) {
     // print('add line');
     for (var l in lines) {
-      if (l.points.first == start && l.points.last == end) {
+      if (l.points.first == start && l.points.last == end ||
+          l.points.first == end && l.points.last == start) {
         return;
       }
     }

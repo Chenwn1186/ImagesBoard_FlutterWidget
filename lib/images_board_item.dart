@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_canvas/images_board.dart';
 import 'package:simple_canvas/images_board_item_img.dart';
@@ -97,6 +99,17 @@ class BoardPoint {
   int code;
   BoardPoint(this.position, this.code);
 
+  String toJson() {
+    return json.encode({
+      'position': {'dx': position.dx, 'dy': position.dy},
+      'size': size,
+      'scale': scale,
+      'code': code,
+      'parentCode': parent?.code,
+      'parentLineCode': parentLine?.code,
+    });
+  }
+
   void click() {
     isSelected++;
     var mng = ImagesBoardManager();
@@ -170,7 +183,8 @@ class BoardPoint {
     scale = min(max(scale, minScale), maxScale);
   }
 
-  bool checkOnLine(Offset globalPoint, {Offset delta = Offset.zero, bool isClicked = false}) {
+  bool checkOnLine(Offset globalPoint,
+      {Offset delta = Offset.zero, bool isClicked = false}) {
     if (parentLine == null) return false;
     bool result = inArea(globalPoint);
     if (!result || isClicked) {
@@ -210,6 +224,15 @@ class BoardLine {
   Path path = Path();
   BoardLine(this.points, this.code);
 
+  String toJson() {
+    return json.encode({
+      'pointsCode': points.map((e) => e.code).toList(),
+      'code': code,
+      // 'scale': scale,
+      // 'width': width,
+    }); 
+  }
+
   void updatePointsPosition() {
     var mng = ImagesBoardManager();
     var globalOffset = mng.globalOffset;
@@ -240,7 +263,7 @@ class BoardLine {
         BoardPoint(midPoint, DateTime.now().millisecondsSinceEpoch)
           ..parentLine = this
           ..scale = boardScale
-          ..size=8);
+          ..size = 8);
   }
 
   void removePoint(int code) {
@@ -252,9 +275,11 @@ class BoardLine {
     }
   }
 
-  bool checkPointsInArea(Offset globalPoint, {Offset delta = Offset.zero, bool isClicked = false}) {
+  bool checkPointsInArea(Offset globalPoint,
+      {Offset delta = Offset.zero, bool isClicked = false}) {
     for (int i = 1; i < points.length - 1; i++) {
-      if (points[i].checkOnLine(globalPoint, delta: delta, isClicked:  isClicked)) {
+      if (points[i]
+          .checkOnLine(globalPoint, delta: delta, isClicked: isClicked)) {
         selectedPoint = i;
         return true;
       }
@@ -284,10 +309,7 @@ class BoardLine {
     if (!rightClick) {
       if (inTail(position)) return false;
       if (checkPointsInArea(position, isClicked: isClicked)) return true;
-    }
-    else{
-
-    }
+    } else {}
     double tolerance = width * scale * ImagesBoardManager().scale * 2;
     final metrics = path.computeMetrics();
     var localPosition = position - ImagesBoardManager().boardOffset;
@@ -338,7 +360,7 @@ class BoardLine {
   }
 
   bool checkDelete(Offset globalPoint) {
-    if (isPointOnPath(globalPoint,false, rightClick: true)) {
+    if (isPointOnPath(globalPoint, false, rightClick: true)) {
       ImagesBoardManager().lastItemCode = code;
       print(' set code line');
       unclick();
@@ -349,21 +371,19 @@ class BoardLine {
   }
 }
 
-
-
-
 class BoardArea extends BoardItem {
   List<ImageItem> items = [];
   Color bgColor = const Color.fromARGB(161, 255, 255, 255);
   Color sideColor = const Color.fromARGB(255, 174, 174, 174);
-  double minX=0;
-  double minY=0;
-  double maxX=0;
-  double maxY=0;
+  double minX = 0;
+  double minY = 0;
+  double maxX = 0;
+  double maxY = 0;
   List<BoardText> labels = [];
   List<BoardText> toDeletLabels = [];
   List<BoardText> toAddLabels = [];
-  BoardArea(super.globalPosition, super.scale, super.width, super.height, super.code){
+  BoardArea(super.globalPosition, super.scale, super.width, super.height,
+      super.code) {
     if (labels.isEmpty) {
       var addButton = BoardText(
           Offset(localPosition.dx, localPosition.dy),
@@ -380,15 +400,30 @@ class BoardArea extends BoardItem {
     }
   }
 
+
+
+
+  String toJson() {
+    return json.encode({
+      'globalPosition': {'dx': globalPosition.dx, 'dy': globalPosition.dy},
+      'scale': scale,
+      'width': width,
+      'height': height,
+      'code': code,
+      'itemsCode': items.map((e) => e.code).toList(), 
+      'labels': labels.map((e) => e.toJson()).toList(),
+    }) ;
+  }
+
   @override
   bool inArea(Offset globalPoint) {
-    var localPosition = ImagesBoardManager().global2Local(globalPoint)+ ImagesBoardManager().globalOffset;
+    var localPosition = ImagesBoardManager().global2Local(globalPoint) +
+        ImagesBoardManager().globalOffset;
     return localPosition.dx >= minX &&
         localPosition.dx <= maxX &&
         localPosition.dy >= minY &&
         localPosition.dy <= maxY;
   }
-
 
   bool checkDelete(Offset globalPoint) {
     if (inArea(globalPoint)) {
@@ -406,17 +441,17 @@ class BoardArea extends BoardItem {
   bool checkLabelsClick(Offset globalPoint, BuildContext context) {
     bool result = false;
     for (int i = 0; i < labels.length; i++) {
-        var element = labels[i];
-        if (element.checkInArea(globalPoint, false, context: context)) {
-            result = true;
-        }
+      var element = labels[i];
+      if (element.checkInArea(globalPoint, false, context: context)) {
+        result = true;
+      }
     }
     labels.insertAll(0, toAddLabels);
     toAddLabels.clear();
     labels.removeWhere((element) => toDeletLabels.contains(element));
     toDeletLabels.clear();
     return result;
-}
+  }
 
   void addLabel(String text, Color bgColor, Color textColor) {
     var label = BoardText(
@@ -431,7 +466,7 @@ class BoardArea extends BoardItem {
         this);
 
     // toAddLabels.add(label);
-    labels.insert(labels.length-1, label);
+    labels.insert(labels.length - 1, label);
   }
 
   void deleteLabel(String text) {

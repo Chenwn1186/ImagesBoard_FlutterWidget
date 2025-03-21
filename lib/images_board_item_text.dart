@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:simple_canvas/floating_component_controller.dart';
 import 'package:simple_canvas/images_board.dart';
@@ -23,6 +25,14 @@ class BoardText extends BoardItem {
       int bottomMDCodePoint = 0}) {
     oriTextColor = textColor;
     oriBgColor = bgColor;
+  }
+
+  String toJson() {
+    return json.encode({
+      'text': text,
+      'textColor': textColor.r,
+      'bgColor': bgColor.r,
+    });
   }
 
   void setLeftMDCodePoint(int codePoint) {
@@ -52,7 +62,6 @@ class BoardText extends BoardItem {
   void setText(String text) {
     this.text = text;
   }
-
 
   @override
   void click({BuildContext? context, Offset globalPoint = Offset.zero}) {
