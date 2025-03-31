@@ -54,7 +54,7 @@ class ImageItem extends BoardItem {
           width,
           height,
           DateTime.now().millisecondsSinceEpoch,
-          '添加标签',
+          'Add Label',
           Colors.white,
           Colors.black,
           this,
@@ -265,7 +265,7 @@ class ImageItem extends BoardItem {
   }
 
   void deleteLabel(String text) {
-    if (text != '添加标签') {
+    if (text != 'Add Label') {
       labels.removeWhere((element) => element.text == text);
     }
   }

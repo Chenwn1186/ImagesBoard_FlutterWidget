@@ -65,7 +65,7 @@ class BoardText extends BoardItem {
 
   @override
   void click({BuildContext? context, Offset globalPoint = Offset.zero}) {
-    if (text != '添加标签') {
+    if (text != 'Add Label') {
       super.click();
       if (isSelected == 1) {
         var temp = bgColor;
@@ -76,7 +76,7 @@ class BoardText extends BoardItem {
         parent?.toDeletLabels.add(this);
       }
     } else {
-      print('添加标签');
+      print('Add Label');
       if (context == null) {
         return;
       }
