@@ -105,7 +105,7 @@ class ImagesBoardManager with ChangeNotifier {
       List<dynamic> jsonList = json.decode(jsonString);
       imageItems = jsonList.map((e) => ImageItem.fromJson(e)).toList();
     }
-    
+
   }
 
   String toJson() {
@@ -128,7 +128,13 @@ class ImagesBoardManager with ChangeNotifier {
           try {
             String jsonString = resultFile.readAsStringSync();
             Map<String, dynamic> jsonMap = json.decode(jsonString);
-            List<dynamic> labels = jsonMap['标签'] as List<dynamic>;
+            List<dynamic> labels = [];
+            if (jsonMap.containsKey('Tags')) {
+              labels = jsonMap['Tags'] as List<dynamic>; 
+            }
+            if (jsonMap.containsKey('标签')) {
+              labels = jsonMap['标签'] as List<dynamic>; 
+            }
             for (var label in labels) {
               item.addLabel(label, Colors.white, Colors.black);
             }
